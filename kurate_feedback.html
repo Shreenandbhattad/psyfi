@@ -1,0 +1,922 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kurate - UX Research Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #11100f;
+    --surface: #181716;
+    --surface2: #22201e;
+    --panel: #f4f0e8;
+    --border: #34302c;
+    --text: #f6f1e8;
+    --muted: #a49b90;
+    --content: #c9a45d;
+    --ux: #7f9f9a;
+    --content-soft: rgba(201,164,93,0.14);
+    --ux-soft: rgba(127,159,154,0.16);
+    --accent: #c9a45d;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  html { font-size: 14px; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    letter-spacing: 0.01em;
+  }
+
+  /* Header */
+  header {
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(17,16,15,0.94);
+    backdrop-filter: blur(16px);
+  }
+  header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.4rem;
+    font-style: italic;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  header h1 span { color: var(--accent); }
+  .header-meta { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 20px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .dot.content { background: var(--content); }
+  .dot.ux { background: var(--ux); }
+
+  /* Layout */
+  .app { display: flex; height: calc(100vh - 61px); }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 18px 0;
+    background: var(--surface);
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .section-label {
+    padding: 8px 16px 4px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .nav-item {
+    width: 100%;
+    border: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    border-left: 2px solid transparent;
+    font-size: 0.82rem;
+    font-family: inherit;
+    text-align: left;
+    color: var(--muted);
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.035); color: var(--text); }
+  .nav-item.active {
+    background: rgba(201,164,93,0.1);
+    border-left-color: var(--accent);
+    color: var(--text);
+  }
+  .nav-item .badge {
+    margin-left: auto;
+    font-size: 0.65rem;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 1px 7px;
+    color: var(--muted);
+  }
+  .nav-item.active .badge { background: rgba(201,164,93,0.15); color: var(--content); }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: var(--border); }
+  .nav-item.has-notes .nav-dot { background: var(--accent); }
+  
+  /* Main area */
+  .main {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .main::-webkit-scrollbar { width: 6px; }
+  .main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Screen viewer */
+  .screen-viewer {
+    flex: 1;
+    min-height: 0;
+    padding: 34px 56px 40px;
+    display: flex;
+    align-items: flex-start;
+    gap: 34px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scroll-padding-inline: 56px;
+    scroll-snap-type: x proximity;
+  }
+  .screen-viewer::-webkit-scrollbar { height: 8px; }
+  .screen-viewer::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+  .screen-viewer::-webkit-scrollbar-thumb {
+    background: #3f3831;
+    border-radius: 999px;
+  }
+
+  .review-card {
+    flex: 0 0 min(540px, calc(100vw - 360px));
+    position: relative;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    scroll-snap-align: center;
+    opacity: 0.58;
+    transform: translateY(8px) scale(0.975);
+    transition: opacity 0.36s ease, transform 0.36s ease;
+  }
+  .review-card.active-screen,
+  .review-card:hover {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .phone-wrapper {
+    position: relative;
+    flex-shrink: 0;
+    width: min(390px, calc(100vw - 390px));
+    max-height: calc(100vh - 310px);
+    animation: screen-enter 420ms ease both;
+    filter: drop-shadow(0 28px 80px rgba(0,0,0,0.52));
+  }
+  .phone-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #0a0a0a;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.12);
+    transition: transform 0.34s ease, box-shadow 0.34s ease;
+  }
+  .review-card:hover .phone-frame,
+  .review-card.active-screen .phone-frame { transform: translateY(-2px); }
+  .phone-img {
+    width: 100%;
+    max-height: calc(100vh - 310px);
+    object-fit: contain;
+    display: block;
+    border-radius: 0;
+  }
+
+  /* Annotation pins */
+  .pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    z-index: 10;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease;
+    border: 2px solid rgba(255,255,255,0.52);
+    user-select: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    font-family: inherit;
+    opacity: 0;
+  }
+  .pin.ready { opacity: 0.96; }
+  .pin.content {
+    background: var(--content);
+    color: #14110d;
+  }
+  .pin.ux {
+    background: var(--ux);
+    color: #111615;
+  }
+  .pin:hover, .pin.active {
+    transform: translate(-50%, -50%) scale(1.14);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+  }
+  .pin.active { border-color: rgba(255,255,255,0.5); }
+
+  /* Feedback panel */
+  .feedback-panel {
+    width: min(680px, 100%);
+    text-align: center;
+  }
+
+  .screen-title-area {
+    margin-bottom: 0;
+  }
+  .screen-title-area h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    line-height: 1.2;
+  }
+  .screen-title-area .screen-meta {
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .annotation-count {
+    font-size: 0.78rem;
+    color: var(--muted);
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .annotation-count strong { color: var(--text); }
+
+  /* Annotation cards */
+  .annotation-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .annotation-card {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+  }
+  .annotation-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+  .annotation-card.content::before { background: var(--content); }
+  .annotation-card.ux::before { background: var(--ux); }
+  
+  .annotation-card:hover {
+    border-color: #444;
+    transform: translateX(2px);
+  }
+  .annotation-card.active {
+    transform: translateX(4px);
+  }
+  .annotation-card.active.content { border-color: var(--content); background: var(--content-soft); }
+  .annotation-card.active.ux { border-color: var(--ux); background: var(--ux-soft); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .card-pin {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .card-pin.content { background: var(--content); color: #000; }
+  .card-pin.ux { background: var(--ux); color: #000; }
+
+  .card-type-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  .card-type-label.content { color: var(--content); }
+  .card-type-label.ux { color: var(--ux); }
+  .card-label { font-weight: 600; font-size: 0.88rem; color: var(--text); }
+
+  .card-what {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .card-why {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .card-why-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 12px 20px 0;
+    color: var(--muted);
+  }
+  .empty-state .emoji { font-size: 2rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+
+  .inline-comment {
+    position: absolute;
+    top: 20%;
+    right: -130px;
+    z-index: 30;
+    width: min(340px, 80vw);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(18px) scale(0.97);
+    transition: max-height 0.4s cubic-bezier(.2,.8,.2,1), opacity 0.26s ease, transform 0.4s cubic-bezier(.2,.8,.2,1);
+  }
+  .inline-comment.open {
+    max-height: 360px;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0) scale(1);
+  }
+  .comment-card {
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 16px 18px;
+    background: rgba(24,23,22,0.96);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.26);
+    text-align: left;
+  }
+  .comment-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .comment-type {
+    margin-bottom: 4px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .comment-type.content { color: var(--content); }
+  .comment-type.ux { color: var(--ux); }
+  .comment-title {
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .comment-close {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .comment-close:hover {
+    color: var(--text);
+    border-color: #5a5046;
+    background: rgba(255,255,255,0.04);
+  }
+  .comment-label {
+    margin-top: 12px;
+    margin-bottom: 4px;
+    color: var(--muted);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .comment-copy {
+    color: var(--text);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  /* Nav arrows */
+  .nav-arrows {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-btn:hover { background: var(--surface2); border-color: #5a5046; transform: translateY(-1px); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter { margin-left: auto; font-size: 0.78rem; color: var(--muted); }
+  .nav-counter strong { color: var(--text); }
+
+  /* Tooltip pulse animation */
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(201,164,93,0.28); }
+    70% { box-shadow: 0 0 0 10px rgba(201,164,93,0); }
+    100% { box-shadow: 0 0 0 0 rgba(201,164,93,0); }
+  }
+  .pin.pulse { animation: none; }
+
+  @keyframes screen-enter {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+  
+  /* Summary stats bar */
+  .stats-bar {
+    display: none;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stat {
+    flex: 1;
+    padding: 14px 20px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .stat:last-child { border-right: none; }
+  .stat-num { font-family: 'Instrument Serif', serif; font-size: 1.6rem; font-style: italic; line-height: 1; }
+  .stat-num.c { color: var(--content); }
+  .stat-num.u { color: var(--ux); }
+  .stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-top: 3px; }
+
+  /* Feedback modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+  }
+  .modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal {
+    width: min(520px, 100%);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #151515;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+    transform: translateY(12px) scale(0.98);
+    transition: transform 0.24s ease;
+  }
+  .modal-backdrop.open .modal { transform: translateY(0) scale(1); }
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 22px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-kicker {
+    margin-bottom: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .modal-kicker.content { color: var(--content); }
+  .modal-kicker.ux { color: var(--ux); }
+  .modal-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    line-height: 1.1;
+  }
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+  .modal-close:hover { border-color: #555; background: #2a2a2a; }
+  .modal-body { padding: 20px 22px 22px; }
+  .modal-section + .modal-section { margin-top: 18px; }
+  .modal-label {
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .modal-copy {
+    color: var(--text);
+    font-size: 0.94rem;
+    line-height: 1.65;
+  }
+
+  @media (max-width: 860px) {
+    header {
+      align-items: flex-start;
+      gap: 14px;
+      padding: 18px 20px;
+    }
+    .legend { gap: 12px; flex-wrap: wrap; }
+    .app {
+      display: block;
+      height: auto;
+    }
+    .sidebar {
+      width: 100%;
+      min-width: 0;
+      max-height: 190px;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .screen-viewer {
+      padding: 24px 18px 32px;
+      scroll-padding-inline: 18px;
+      gap: 18px;
+    }
+    .review-card {
+      flex-basis: calc(100vw - 36px);
+      opacity: 1;
+      transform: none;
+    }
+    .phone-wrapper {
+      width: min(390px, calc(100vw - 54px));
+      max-height: none;
+    }
+    .phone-img { max-height: none; }
+    .inline-comment {
+      position: static;
+      width: min(420px, 100%);
+      transform: translateY(-8px) scale(0.98);
+    }
+    .inline-comment.open {
+      transform: translateY(0) scale(1);
+    }
+    .feedback-panel { width: 100%; }
+    .stats-bar { flex-wrap: wrap; }
+    .stat { flex: 1 1 50%; }
+    .nav-arrows { padding: 14px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Kurate - <span>UX Research</span> Feedback</h1>
+    <div class="header-meta">PSYFI x Kurate &nbsp;|&nbsp; Qual + Mixpanel</div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="dot content"></div> Feature / Content</div>
+    <div class="legend-item"><div class="dot ux"></div> UI / UX</div>
+  </div>
+</header>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar"></nav>
+  <div class="main">
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="screen-viewer" id="screenViewer"></div>
+    <div class="nav-arrows">
+      <button class="nav-btn" id="prevBtn" type="button" onclick="navigate(-1)">Prev</button>
+      <button class="nav-btn" id="nextBtn" type="button" onclick="navigate(1)">Next</button>
+      <div class="nav-counter" id="navCounter"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="feedbackModal" aria-hidden="true" onclick="closeModal(event)">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-kicker" id="modalType"></div>
+        <h2 class="modal-title" id="modalTitle"></h2>
+      </div>
+      <button class="modal-close" type="button" aria-label="Close popup" onclick="closeModal()">x</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-label">What</div>
+        <div class="modal-copy" id="modalWhat"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-label">Why</div>
+        <div class="modal-copy" id="modalWhy"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const screens = [{"id":"splash","page":2,"title":"Splash Screen","section":"Onboarding","annotations":[{"x":63,"y":64,"type":"content","label":"Tagline Copy","what":"\"What you consume becomes who you are\"","why":"Promotes consumption rather than sharing — the platform\u0027s core goal is kurated sharing, not passive consuming."},{"x":63,"y":74,"type":"content","label":"Sub-copy","what":"\"Grow with the 100 minds you care about\"","why":"Is growth a strong motivation to join another social platform? \u0027Care about\u0027 → consider: minds that inspire you or shape you."},{"x":63,"y":22,"type":"ux","label":"Background Grid","what":"Grid behind the circular logo adds visual noise","why":"Removing it would reduce clutter on an already-busy splash screen."},{"x":63,"y":10,"type":"ux","label":"Logo Size","what":"\"Kurate\" wordmark could be larger","why":"Brand salience on the first screen the user ever sees."}],"img_src":"assets/screens/01-splash-screen.jpg"},{"id":"mobile_entry","page":3,"title":"Enter Mobile Number","section":"Onboarding","annotations":[{"x":63,"y":5,"type":"content","label":"Header Tagline","what":"\"Pick your circle, build your taste\"","why":"Misleading — implies users don\u0027t already have taste. Consider a framing that flatters rather than undermines."},{"x":63,"y":27,"type":"content","label":"OTP Helper Text","what":"\"You will get an OTP on the provided number\"","why":"Awkward phrasing. → \"You will receive an OTP\" is more polished and natural."}],"img_src":"assets/screens/02-enter-mobile-number.jpg"},{"id":"mobile_entry_cta","page":4,"title":"Mobile Number (Active CTA)","section":"Onboarding","annotations":[{"x":63,"y":50,"type":"ux","label":"Progress Bar Missing","what":"No progress indicator during sign-up","why":"Salience of how far along the user is would reduce drop-off — people are less likely to abandon when they can see the finish line."}],"img_src":"assets/screens/03-mobile-number-active-cta.jpg"},{"id":"verify_empty","page":5,"title":"Verify Mobile — Empty","section":"Onboarding","annotations":[],"img_src":"assets/screens/04-verify-mobile-empty.jpg"},{"id":"verify_otp","page":6,"title":"Verify Mobile — OTP Entry","section":"Onboarding","annotations":[],"img_src":"assets/screens/05-verify-mobile-otp-entry.jpg"},{"id":"verify_success","page":7,"title":"Verification Successful","section":"Onboarding","annotations":[{"x":63,"y":72,"type":"content","label":"Confirmation Copy","what":"\"Thank you! Your phone number has been verified.\"","why":"Redundant — the modal already says \u0027Verification successful\u0027. The longer text adds no value."},{"x":63,"y":56,"type":"ux","label":"Overlapping Modal","what":"Verification modal overlaps with OTP input boxes","why":"Visually unclean — reduce the size or redesign modal placement."}],"img_src":"assets/screens/06-verification-successful.jpg"},{"id":"name_typing","page":8,"title":"What to Call You — Typing","section":"Onboarding","annotations":[{"x":63,"y":19,"type":"content","label":"Screen Heading","what":"\"What would you like us to call you?\"","why":"Sounds like a human is on the other side or it\u0027s a newsletter signup. Not aligned with social platform language. → Consider: \u0027How would you like your network to find you?\u0027"},{"x":63,"y":42,"type":"ux","label":"\"Name\" Label","what":"Label \u0027Name\u0027 above the text box is redundant","why":"Placeholder text already communicates this. Removing it keeps the UI minimal."}],"img_src":"assets/screens/07-what-to-call-you-typing.jpg"},{"id":"name_filled","page":9,"title":"What to Call You — Filled","section":"Onboarding","annotations":[{"x":63,"y":50,"type":"ux","label":"Profile Preview Missing","what":"No preview of what the user\u0027s profile looks like to others","why":"Showing a snapshot of how their name appears in search makes sign-up feel aspirational and personal."}],"img_src":"assets/screens/08-what-to-call-you-filled.jpg"},{"id":"username_empty","page":10,"title":"Create Username — Empty","section":"Onboarding","annotations":[{"x":63,"y":35,"type":"content","label":"\"Username\" Label","what":"\u0027Username\u0027 label above the text box is redundant","why":"The header \u0027Create a username\u0027 already sets context. Remove for minimalism."},{"x":63,"y":25,"type":"content","label":"\"Add a username\" Subtext","what":"\u0027Add a username.\u0027 below the heading is redundant","why":"\u0027Create a username\u0027 does the job on its own."},{"x":63,"y":21,"type":"ux","label":"Settings Hint Placement","what":"\u0027You can change this in Settings any time\u0027 appears before the user has set a username","why":"Talking about changing something before it\u0027s been set is incongruent. Move this hint below the text box."}],"img_src":"assets/screens/09-create-username-empty.jpg"},{"id":"username_valid","page":11,"title":"Create Username — Valid","section":"Onboarding","annotations":[],"img_src":"assets/screens/10-create-username-valid.jpg"},{"id":"profile_photo","page":12,"title":"Give Your Profile a Face","section":"Onboarding","annotations":[{"x":63,"y":22,"type":"content","label":"\"Circle will identify you\" Text","what":"\u0027Your circle will be able to identify you\u0027 is redundant","why":"The heading and context already communicate this. Minimal = better."},{"x":63,"y":27,"type":"content","label":"Settings Reminder","what":"\u0027You can change this in settings any time\u0027 is repeated again","why":"Same repetitive pattern seen on the username screen. Cut for cleanliness."}],"img_src":"assets/screens/11-give-your-profile-a-face.jpg"},{"id":"interests_empty","page":13,"title":"Pick Interests — Empty","section":"Onboarding","annotations":[{"x":63,"y":56,"type":"ux","label":"Category Images","what":"Illustrated images in each category tile cause cognitive overload","why":"Replace with clean category tabs — simpler, faster to scan, less distracting."},{"x":63,"y":93,"type":"ux","label":"\"Others\" Option Missing","what":"No way for users to write in their own categories","why":"The current list is not exhaustive. An \u0027Others\u0027 free-text option avoids restricting users and helps discover emerging interest categories."}],"img_src":"assets/screens/12-pick-interests-empty.jpg"},{"id":"interests_selected","page":14,"title":"Pick Interests — 3 Selected","section":"Onboarding","annotations":[],"img_src":"assets/screens/13-pick-interests-3-selected.jpg"},{"id":"connect_social","page":15,"title":"Connect Social Accounts","section":"Onboarding","annotations":[{"x":63,"y":50,"type":"content","label":"User Desire: Social Integration","what":"Users want to connect all their social accounts to Kurate","why":"To consolidate saved content in one place and use Kurate as a knowledge management hub — a strong hook for triggering habit loops."},{"x":63,"y":68,"type":"ux","label":"Google/Apple Sign-in Timing","what":"Google/Apple account connection appears late in the flow","why":"Moving it earlier in sign-up would reduce friction and speed up account creation significantly."}],"img_src":"assets/screens/14-connect-social-accounts.jpg"},{"id":"room_ready","page":16,"title":"Your Room Is Ready","section":"Onboarding","annotations":[{"x":63,"y":59,"type":"content","label":"\"Your Room is Ready\" Heading","what":"\u0027Room\u0027 metaphor is incongruent with the rest of the language","why":"The flow used \u0027circle\u0027 and \u0027100 minds\u0027 language throughout. \u0027Room ready\u0027 breaks that pattern — feels like a different product."},{"x":63,"y":77,"type":"ux","label":"Completion Copy","what":"\u0027Every save and share begins to shape who you\u0027re becoming\u0027 is rudimentary","why":"Needs something more aspirational that actively encourages sharing — the platform\u0027s core goal."}],"img_src":"assets/screens/15-your-room-is-ready.jpg"},{"id":"find_circle","page":17,"title":"Find Your Circle","section":"Onboarding","annotations":[{"x":63,"y":56,"type":"ux","label":"Find Contacts Only","what":"\u0027Find your circle\u0027 shows individual contacts but no option to find circles/groups","why":"Adding a tab to find and join \u0027circles\u0027 (groups) would surface the groups feature at the optimal moment."}],"img_src":"assets/screens/16-find-your-circle.jpg"},{"id":"username_taken","page":18,"title":"Username Taken Error","section":"Onboarding","annotations":[],"img_src":"assets/screens/17-username-taken-error.jpg"},{"id":"interests_repeat","page":19,"title":"Pick Interests (Repeat)","section":"Onboarding","annotations":[],"img_src":"assets/screens/18-pick-interests-repeat.jpg"},{"id":"home_feed","page":21,"title":"Home Feed","section":"Home","annotations":[{"x":20,"y":3,"type":"ux","label":"Logo + Grid on Home","what":"Logo and grid background on the home header adds clutter","why":"Minimal header is easier on the mind when the feed itself already has a lot to offer."},{"x":20,"y":50,"type":"content","label":"Links Without Thumbnails","what":"What happens when a shared link has no thumbnail?","why":"Need to define the fallback state — blank card? Domain name? Initials? Should be specified in the design."},{"x":20,"y":84,"type":"content","label":"4 Engagement Metrics","what":"What do the four engagement icons mean and where do they lead?","why":"The meaning and destination of each metric (saves, reposts, shares, comments?) needs to be clarified."}],"img_src":"assets/screens/19-home-feed.jpg"},{"id":"home_post","page":22,"title":"Home Feed — Post Detail","section":"Home","annotations":[],"img_src":"assets/screens/20-home-feed-post-detail.jpg"},{"id":"home_group","page":23,"title":"Home Feed — Group Post","section":"Home","annotations":[],"img_src":"assets/screens/21-home-feed-group-post.jpg"},{"id":"mark_recommended","page":25,"title":"Mark as Recommended","section":"Home","annotations":[],"img_src":"assets/screens/22-mark-as-recommended.jpg"},{"id":"recommended_by","page":26,"title":"Recommended by Shubham","section":"Home","annotations":[],"img_src":"assets/screens/23-recommended-by-shubham.jpg"},{"id":"comments_circle","page":29,"title":"Comments — From Circle","section":"Home","annotations":[],"img_src":"assets/screens/24-comments-from-circle.jpg"},{"id":"comments_all","page":30,"title":"Comments — Show All","section":"Home","annotations":[],"img_src":"assets/screens/25-comments-show-all.jpg"},{"id":"comments_typing","page":31,"title":"Comments — Typing","section":"Home","annotations":[],"img_src":"assets/screens/26-comments-typing.jpg"}];
+
+let currentIdx = 0;
+let activePin = null;
+
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+function getTotalAnnotations() {
+  return screens.reduce((a, s) => a + s.annotations.length, 0);
+}
+function getContentCount() {
+  return screens.reduce((a, s) => a + s.annotations.filter(n => n.type === 'content').length, 0);
+}
+function getUxCount() {
+  return screens.reduce((a, s) => a + s.annotations.filter(n => n.type === 'ux').length, 0);
+}
+function getScreensWithNotes() {
+  return screens.filter(s => s.annotations.length > 0).length;
+}
+
+function renderSidebar() {
+  const sb = document.getElementById('sidebar');
+  let lastSection = '';
+  let html = '';
+  screens.forEach((s, i) => {
+    if (s.section !== lastSection) {
+      html += `<div class="section-label">${escapeHtml(s.section)}</div>`;
+      lastSection = s.section;
+    }
+    const hasNotes = s.annotations.length > 0;
+    html += `<button class="nav-item ${hasNotes ? 'has-notes' : ''} ${i === currentIdx ? 'active' : ''}" type="button" onclick="goTo(${i})">
+      <div class="nav-dot"></div>
+      <span>${escapeHtml(s.title)}</span>
+      ${hasNotes ? `<span class="badge">${s.annotations.length}</span>` : ''}
+    </button>`;
+  });
+  sb.innerHTML = html;
+}
+
+function renderStats() {
+  const sb = document.getElementById('statsBar');
+  sb.innerHTML = `
+    <div class="stat"><div class="stat-num">${screens.length}</div><div class="stat-label">Screens</div></div>
+    <div class="stat"><div class="stat-num">${getScreensWithNotes()}</div><div class="stat-label">With Feedback</div></div>
+    <div class="stat"><div class="stat-num c">${getContentCount()}</div><div class="stat-label">Content Notes</div></div>
+    <div class="stat"><div class="stat-num u">${getUxCount()}</div><div class="stat-label">UX Notes</div></div>
+  `;
+}
+
+function renderScreen() {
+  const viewer = document.getElementById('screenViewer');
+
+  viewer.innerHTML = screens.map((s, screenIdx) => {
+    const imgSrc = s.img_src || (s.img_b64 ? `data:image/jpeg;base64,${s.img_b64}` : '');
+    const pinsHtml = s.annotations.map((a, noteIdx) =>
+      `<button class="pin ${a.type}" type="button" style="left:${a.x}%;top:${a.y}%;" 
+            onclick="openFeedback(${screenIdx}, ${noteIdx})" id="pin-${screenIdx}-${noteIdx}" title="${escapeHtml(a.label)}" aria-label="Open feedback note ${noteIdx + 1}">${noteIdx + 1}</button>`
+    ).join('');
+    const screenNote = s.annotations.length
+      ? `${s.annotations.length} feedback point${s.annotations.length > 1 ? 's' : ''}. Click a numbered marker to view details.`
+      : 'No feedback points on this screen.';
+
+    return `
+      <section class="review-card ${screenIdx === currentIdx ? 'active-screen' : ''}" id="screen-${screenIdx}" data-screen-index="${screenIdx}">
+        <div class="phone-wrapper">
+          <div class="phone-frame">
+            ${imgSrc ? `<img src="${imgSrc}" class="phone-img" alt="${escapeHtml(s.title)}"/>` : '<div style="width:260px;height:520px;background:var(--surface2);border-radius:16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);">No image</div>'}
+            ${pinsHtml}
+          </div>
+        </div>
+        <div class="feedback-panel">
+          <div class="screen-title-area">
+            <div class="screen-meta">${escapeHtml(s.section)} | Screen ${screenIdx + 1} of ${screens.length}</div>
+            <h2>${escapeHtml(s.title)}</h2>
+          </div>
+          <div class="empty-state">
+            <p>${escapeHtml(screenNote)}</p>
+          </div>
+          <div class="inline-comment" id="comment-${screenIdx}" aria-live="polite"></div>
+        </div>
+      </section>
+    `;
+  }).join('');
+
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.pin').forEach(pin => pin.classList.add('ready'));
+  });
+}
+
+function setCurrent(idx, shouldScroll = false) {
+  currentIdx = Math.max(0, Math.min(idx, screens.length - 1));
+  renderSidebar();
+  updateNav();
+
+  document.querySelectorAll('.review-card').forEach((card, i) => {
+    card.classList.toggle('active-screen', i === currentIdx);
+  });
+
+  if (shouldScroll) {
+    const card = document.getElementById(`screen-${currentIdx}`);
+    if (card) card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
+}
+
+function activatePin(screenIdx, noteIdx) {
+  document.querySelectorAll('.pin').forEach(p => p.classList.remove('active'));
+
+  activePin = noteIdx;
+  const pin = document.getElementById(`pin-${screenIdx}-${noteIdx}`);
+  if (pin) pin.classList.add('active');
+}
+
+function openFeedback(screenIdx, noteIdx) {
+  const screen = screens[screenIdx];
+  const note = screen.annotations[noteIdx];
+  if (!note) return;
+
+  setCurrent(screenIdx, false);
+  activatePin(screenIdx, noteIdx);
+
+  document.querySelectorAll('.inline-comment').forEach(comment => {
+    if (comment.id !== `comment-${screenIdx}`) {
+      comment.classList.remove('open');
+      comment.innerHTML = '';
+    }
+  });
+
+  const comment = document.getElementById(`comment-${screenIdx}`);
+  comment.innerHTML = `
+    <article class="comment-card ${note.type}">
+      <div class="comment-top">
+        <div>
+          <div class="comment-type ${note.type}">${note.type === 'content' ? 'Feature / Content' : 'UI / UX'}</div>
+          <div class="comment-title">${escapeHtml(note.label)}</div>
+        </div>
+        <button class="comment-close" type="button" aria-label="Close comment" onclick="closeInlineComment(${screenIdx})">x</button>
+      </div>
+      <div class="comment-label">What</div>
+      <div class="comment-copy">${escapeHtml(note.what)}</div>
+      <div class="comment-label">Why</div>
+      <div class="comment-copy">${escapeHtml(note.why)}</div>
+    </article>
+  `;
+  comment.classList.add('open');
+  comment.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+function closeInlineComment(screenIdx) {
+  activePin = null;
+  document.querySelectorAll(`#screen-${screenIdx} .pin`).forEach(pin => pin.classList.remove('active'));
+  const comment = document.getElementById(`comment-${screenIdx}`);
+  if (comment) comment.classList.remove('open');
+}
+
+function closeModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+
+  const modal = document.getElementById('feedbackModal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function goTo(idx) {
+  activePin = null;
+  closeModal();
+  closeInlineComment(currentIdx);
+  setCurrent(idx, true);
+  const items = document.querySelectorAll('.nav-item');
+  if (items[idx]) items[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function navigate(dir) {
+  const next = currentIdx + dir;
+  if (next >= 0 && next < screens.length) goTo(next);
+}
+
+function updateNav() {
+  document.getElementById('prevBtn').disabled = currentIdx === 0;
+  document.getElementById('nextBtn').disabled = currentIdx === screens.length - 1;
+  document.getElementById('navCounter').innerHTML = `Screen <strong>${currentIdx + 1}</strong> of <strong>${screens.length}</strong>`;
+}
+
+function setupScrollTracking() {
+  const viewer = document.getElementById('screenViewer');
+  let ticking = false;
+
+  viewer.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+
+    requestAnimationFrame(() => {
+      const viewerCenter = viewer.getBoundingClientRect().left + viewer.clientWidth / 2;
+      let closestIdx = currentIdx;
+      let closestDistance = Infinity;
+
+      document.querySelectorAll('.review-card').forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const distance = Math.abs((rect.left + rect.width / 2) - viewerCenter);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIdx = Number(card.dataset.screenIndex);
+        }
+      });
+
+      if (closestIdx !== currentIdx) setCurrent(closestIdx, false);
+      ticking = false;
+    });
+  });
+}
+
+// Init
+renderStats();
+renderScreen();
+setCurrent(0, false);
+setupScrollTracking();
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  const modalOpen = document.getElementById('feedbackModal').classList.contains('open');
+  if (e.key === 'Escape' && modalOpen) closeModal();
+  if (e.key === 'Escape' && activePin !== null) closeInlineComment(currentIdx);
+  if (modalOpen) return;
+
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') navigate(-1);
+});
+</script>
+</body>
+</html>
+
