@@ -865,7 +865,7 @@ function navigate(dir){const n=currentIdx+dir;if(n>=0&&n<screens.length)goTo(n);
 function updateNav(){
   document.getElementById('prevBtn').disabled=currentIdx===0;
   document.getElementById('nextBtn').disabled=currentIdx===screens.length-1;
-  document.getElementById('navCounter').innerHTML=`Screen <strong>${currentIdx+1}</strong> of <strong>${screens.length}</strong>`;
+  const nc=document.getElementById('navCounter');if(nc)nc.innerHTML=`Screen <strong>${currentIdx+1}</strong> of <strong>${screens.length}</strong>`;
 }
 
 function setupScroll(){
