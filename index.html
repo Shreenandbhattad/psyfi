@@ -7,6 +7,98 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <style>
+/* ── Password gate ───────────────────────────────────────── */
+#gate{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,1);
+  transition:opacity .7s cubic-bezier(.4,0,.2,1),visibility .7s;
+}
+#gate.unlocked{opacity:0;visibility:hidden;pointer-events:none}
+
+.gate-card{
+  display:flex;flex-direction:column;align-items:center;gap:28px;
+  padding:52px 48px 44px;
+  background:rgba(255,255,255,0.72);
+  border:1px solid rgba(52,17,75,0.1);
+  border-radius:20px;
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  box-shadow:0 8px 48px rgba(52,17,75,0.08),0 2px 12px rgba(52,17,75,0.05);
+  width:min(360px,90vw);
+  animation:gate-in .55s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes gate-in{
+  from{opacity:0;transform:translateY(14px) scale(.97)}
+  to{opacity:1;transform:none}
+}
+
+.gate-brand{
+  font-size:1.45rem;font-weight:700;letter-spacing:.01em;
+  color:#34114b;line-height:1;text-align:center
+}
+.gate-brand .y{color:#ff6e60}
+
+.gate-hint{
+  font-size:.76rem;color:#9b8aaa;letter-spacing:.01em;text-align:center;
+  line-height:1.5;margin-top:-14px
+}
+
+.gate-input-wrap{
+  position:relative;width:100%
+}
+#pwInput{
+  width:100%;
+  padding:13px 46px 13px 16px;
+  border:1.5px solid rgba(52,17,75,0.18);
+  border-radius:10px;
+  font-size:.9rem;font-family:inherit;
+  color:#1a0b24;background:rgba(255,255,255,0.9);
+  outline:none;
+  transition:border-color .18s,box-shadow .18s;
+  letter-spacing:.04em;
+  -webkit-text-security:disc;
+}
+#pwInput::placeholder{letter-spacing:.01em;color:#b8a8c8}
+#pwInput:focus{
+  border-color:#34114b;
+  box-shadow:0 0 0 3px rgba(52,17,75,0.09)
+}
+#pwInput.shake{animation:shake .4s cubic-bezier(.36,.07,.19,.97)}
+@keyframes shake{
+  10%,90%{transform:translateX(-3px)}
+  20%,80%{transform:translateX(4px)}
+  30%,50%,70%{transform:translateX(-5px)}
+  40%,60%{transform:translateX(5px)}
+}
+#pwInput.error{border-color:#ff6e60;box-shadow:0 0 0 3px rgba(255,110,96,0.12)}
+
+.eye-btn{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;padding:2px;
+  color:#b8a8c8;transition:color .15s;display:flex;align-items:center
+}
+.eye-btn:hover{color:#34114b}
+
+#gateBtn{
+  width:100%;padding:13px;
+  background:#34114b;color:#fff;
+  border:none;border-radius:10px;
+  font-size:.88rem;font-family:inherit;font-weight:600;
+  cursor:pointer;letter-spacing:.02em;
+  transition:background .15s,transform .12s,box-shadow .15s;
+  box-shadow:0 2px 12px rgba(52,17,75,0.22)
+}
+#gateBtn:hover{background:#4a1a6e;box-shadow:0 4px 18px rgba(52,17,75,0.28)}
+#gateBtn:active{transform:scale(.98)}
+
+#gateErr{
+  font-size:.72rem;color:#ff6e60;
+  height:16px;text-align:center;
+  transition:opacity .2s
+}
+/* ── End password gate ───────────────────────────────────── */
+
 :root {
   --bg: #ffffff;
   --surface: #f9f8fb;
@@ -284,6 +376,27 @@ header{
 </style>
 </head>
 <body>
+
+<!-- ── Password gate overlay ─────────────────────────────── -->
+<div id="gate" role="dialog" aria-modal="true" aria-label="Enter password">
+  <div class="gate-card">
+    <div class="gate-brand">PS<span class="y">Y</span>FI LAB</div>
+    <p class="gate-hint">Enter password to continue</p>
+    <div class="gate-input-wrap">
+      <input id="pwInput" type="password" placeholder="Password"
+        autocomplete="current-password" spellcheck="false"
+        onkeydown="if(event.key==='Enter')unlock()"/>
+      <button class="eye-btn" type="button" onclick="toggleEye()" tabindex="-1" aria-label="Show password">
+        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+    <button id="gateBtn" type="button" onclick="unlock()">Continue</button>
+    <div id="gateErr" style="opacity:0">Incorrect password. Try again.</div>
+  </div>
+</div>
+<!-- ── End gate ───────────────────────────────────────────── -->
 
 <header>
   <div class="header-left">
@@ -761,6 +874,46 @@ function setupScroll(){
 
 // ── Init ───────────────────────────────────────────────────────────────────
 renderScreen();setCurrent(0,false);setupScroll();
+
+// ── Password gate ────────────────────────────────────────────
+(function(){
+  // Focus input on load
+  window.addEventListener('load',()=>document.getElementById('pwInput').focus());
+})();
+
+function unlock(){
+  const val=document.getElementById('pwInput').value;
+  const err=document.getElementById('gateErr');
+  if(val==='kurate2026'){
+    const gate=document.getElementById('gate');
+    err.style.opacity='0';
+    gate.classList.add('unlocked');
+    // After transition completes, remove from DOM so it can't be re-shown
+    gate.addEventListener('transitionend',()=>gate.remove(),{once:true});
+  } else {
+    const input=document.getElementById('pwInput');
+    input.classList.remove('shake','error');
+    // Force reflow to restart animation
+    void input.offsetWidth;
+    input.classList.add('shake','error');
+    err.style.opacity='1';
+    input.value='';
+    input.focus();
+    setTimeout(()=>input.classList.remove('error'),1200);
+  }
+}
+
+let eyeVisible=false;
+function toggleEye(){
+  eyeVisible=!eyeVisible;
+  const inp=document.getElementById('pwInput');
+  inp.type=eyeVisible?'text':'password';
+  const icon=document.getElementById('eyeIcon');
+  icon.innerHTML=eyeVisible
+    ?`<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
+    :`<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+}
+// ── End gate ─────────────────────────────────────────────────
 
 document.addEventListener('keydown',e=>{
   const open=document.getElementById('feedbackModal').classList.contains('open');
