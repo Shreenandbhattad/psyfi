@@ -141,13 +141,9 @@ header{
 }
 .sidebar-toggle:hover{color:var(--main);border-color:var(--main);background:var(--main-soft)}
 .site-title{
-  font-size:.82rem;font-weight:700;letter-spacing:.01em;
-  color:var(--main);white-space:nowrap;text-decoration:none;
-  transition:opacity .15s
+  font-size:.82rem;font-weight:600;letter-spacing:.01em;
+  color:var(--main);white-space:nowrap
 }
-.site-title:hover{opacity:.75}
-.y-accent{color:var(--accent)}
-.site-sub{font-size:.78rem;font-weight:400;color:var(--muted);white-space:nowrap}
 .legend{display:flex;gap:16px;font-size:.72rem;color:var(--muted)}
 .legend-item{display:flex;align-items:center;gap:5px}
 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -361,6 +357,24 @@ header{
 .modal-label{margin-bottom:4px;color:var(--muted);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
 .modal-copy{color:var(--text);font-size:.88rem;line-height:1.65}
 
+/* ── Corner logo ─────────────────────────────────────────── */
+.corner-logo{
+  position:fixed;bottom:14px;right:16px;z-index:90;
+  width:34px;height:34px;
+  border-radius:8px;overflow:hidden;
+  background:#fff;
+  box-shadow:0 2px 10px rgba(52,17,75,.13),0 0 0 1px rgba(52,17,75,.07);
+  transition:transform .18s ease,box-shadow .18s ease;
+  display:flex;align-items:center;justify-content:center
+}
+.corner-logo:hover{
+  transform:scale(1.08);
+  box-shadow:0 4px 16px rgba(52,17,75,.18),0 0 0 1px rgba(52,17,75,.1)
+}
+.corner-logo img{
+  width:100%;height:100%;object-fit:contain;display:block
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media(max-width:820px){
   header{padding:0 14px;height:auto;padding-top:10px;padding-bottom:10px;flex-wrap:wrap;gap:8px}
@@ -407,7 +421,7 @@ header{
         <rect x="1" y="10.5" width="13" height="1.5" rx=".75" fill="currentColor"/>
       </svg>
     </button>
-    <a href="https://www.psyfilab.com/" target="_blank" rel="noopener" class="site-title">PS<span class="y-accent">Y</span>FI x Kurate</a><span class="site-sub"> | UX Research Feedback</span>
+    <span class="site-title">Kurate: UX Research Feedback</span>
   </div>
   <div class="legend">
     <div class="legend-item"><div class="dot content"></div>Feature / Content</div>
@@ -924,5 +938,10 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft'||e.key==='ArrowUp')navigate(-1);
 });
 </script>
+
+<div class="corner-logo" title="PSYFI Lab">
+  <img src="Logo.jpeg" alt="PSYFI Lab"/>
+</div>
+
 </body>
 </html>
