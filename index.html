@@ -120,10 +120,9 @@ body{
   background:var(--bg);
   color:var(--text);
   font-family:'DM Sans',system-ui,sans-serif;
-  height:100%;
-  max-height:100vh;
-  overflow:hidden;          /* no outer scroll — inner panels scroll */
+  height:100vh;
   line-height:1.5;
+  overflow:hidden;
 }
 
 /* ── Header ─────────────────────────────────────────────── */
@@ -155,7 +154,7 @@ header{
 .dot.ux{background:var(--accent)}
 
 /* ── Layout ──────────────────────────────────────────────── */
-.app{display:flex;height:calc(100vh - 46px);overflow:hidden;flex:1}
+.app{display:flex;height:calc(100vh - 46px);overflow:clip;}
 
 /* ── Sidebar ─────────────────────────────────────────────── */
 .sidebar{
@@ -192,7 +191,7 @@ header{
 .nav-item.has-notes .nav-dot{background:var(--main)}
 
 /* ── Main ────────────────────────────────────────────────── */
-.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.main{flex:1;overflow:clip;display:flex;flex-direction:column;min-width:0}
 
 /* ── Screen viewer ───────────────────────────────────────── */
 .screen-viewer{
