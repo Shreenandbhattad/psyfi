@@ -153,7 +153,8 @@ header{
 .dot.ux{background:var(--accent)}
 
 /* ── Layout ──────────────────────────────────────────────── */
-.app{display:flex;height:calc(100vh - 46px);overflow:hidden;}
+.app{display:flex;height:calc(100vh - 46px);overflow:hidden}
+
 
 /* ── Sidebar ─────────────────────────────────────────────── */
 .sidebar{
@@ -302,21 +303,13 @@ header{
 .comment-copy{color:var(--text);font-size:.76rem;line-height:1.55}
 
 /* ── Nav bar ─────────────────────────────────────────────── */
-.nav-arrows{
-  display:flex;align-items:center;gap:7px;
-  padding:6px 20px;border-top:1px solid var(--border);
-  background:var(--bg);flex-shrink:0;min-height:0
+/* ── Bottom-right logo ───────────────────────────────────── */
+.corner-logo-fixed{
+  position:fixed;bottom:18px;right:18px;z-index:90;
+  width:36px;height:36px;object-fit:contain;
+  opacity:.55;transition:opacity .15s
 }
-.nav-btn{
-  background:transparent;border:1px solid var(--border);color:var(--text);
-  padding:4px 14px;border-radius:5px;cursor:pointer;
-  font-size:.74rem;font-family:inherit;font-weight:500;
-  transition:background .12s,border-color .12s,color .12s
-}
-.nav-btn:hover{background:var(--main);border-color:var(--main);color:#fff}
-.nav-btn:disabled{opacity:.28;cursor:not-allowed}
-.nav-counter{margin-left:auto;font-size:.7rem;color:var(--muted)}
-.nav-counter strong{color:var(--text);font-weight:600}
+.corner-logo-fixed:hover{opacity:1}
 
 /* ── Modal ───────────────────────────────────────────────── */
 .modal-backdrop{
@@ -351,14 +344,6 @@ header{
 .modal-label{margin-bottom:4px;color:var(--muted);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
 .modal-copy{color:var(--text);font-size:.88rem;line-height:1.65}
 
-/* ── Nav logo ─────────────────────────────────────────────── */
-.nav-logo{
-  margin-left:auto;
-  width:32px;height:32px;
-  object-fit:contain;
-  opacity:.55;
-  flex-shrink:0;
-}
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media(max-width:820px){
@@ -422,11 +407,6 @@ header{
   <nav class="sidebar" id="sidebar"></nav>
   <div class="main">
     <div class="screen-viewer" id="screenViewer"></div>
-    <div class="nav-arrows">
-      <button class="nav-btn" id="prevBtn" type="button" onclick="navigate(-1)">← Prev</button>
-      <button class="nav-btn" id="nextBtn" type="button" onclick="navigate(1)">Next →</button>
-      <img src="Logo.jpeg" alt="" class="nav-logo"/>
-    </div>
   </div>
 </div>
 
@@ -859,11 +839,7 @@ function goTo(idx){
 
 function navigate(dir){const n=currentIdx+dir;if(n>=0&&n<screens.length)goTo(n);}
 
-function updateNav(){
-  document.getElementById('prevBtn').disabled=currentIdx===0;
-  document.getElementById('nextBtn').disabled=currentIdx===screens.length-1;
-  const nc=document.getElementById('navCounter');if(nc)nc.innerHTML=`Screen <strong>${currentIdx+1}</strong> of <strong>${screens.length}</strong>`;
-}
+function updateNav(){}
 
 function setupScroll(){
   const viewer=document.getElementById('screenViewer');
@@ -950,5 +926,6 @@ document.addEventListener('keydown',e=>{
 </script>
 
 
+<img src="Logo.jpeg" alt="" class="corner-logo-fixed"/>
 </body>
 </html>
